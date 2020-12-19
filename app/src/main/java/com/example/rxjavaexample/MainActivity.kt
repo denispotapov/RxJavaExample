@@ -9,6 +9,7 @@ import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.functions.Function
 import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
@@ -24,19 +25,29 @@ class MainActivity : AppCompatActivity() {
 
         //val task = Task("Walk the dog", false, 3)
 
-        val taskObservable  = Observable
-            .just("first", "second", "third", "fourth", "fifth", "sixth",
-                "seventh", "eighth", "ninth", "tenth")
+        val observable  = Observable
+            .range(0, 9)
             .subscribeOn(Schedulers.io())
+            .map(object : Function<Int, Task> {
+                override fun apply(t: Int): Task {
+                    Timber.d("apply: ${Thread.currentThread().name}")
+                    return Task("this is a task with priority: $t", false, t)
+                }
+            })
+            .takeWhile(object : Predicate<Task> {
+                override fun test(t: Task): Boolean {
+                    return t.priority < 9
+                }
+            })
             .observeOn(AndroidSchedulers.mainThread())
 
-        taskObservable.subscribe(object : Observer<String> {
+        observable.subscribe(object : Observer<Task> {
             override fun onSubscribe(d: Disposable) {
 
             }
 
-            override fun onNext(t: String) {
-                Timber.d("onNext: $t")
+            override fun onNext(t: Task) {
+                Timber.d("onNext: ${t.priority}")
             }
 
             override fun onError(e: Throwable) {
@@ -46,6 +57,7 @@ class MainActivity : AppCompatActivity() {
             override fun onComplete() {
 
             }
+
         })
     }
 }
