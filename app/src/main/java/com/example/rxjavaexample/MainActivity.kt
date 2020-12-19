@@ -22,13 +22,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
-        val task = Task("Walk the dog", false, 3)
+        //val task = Task("Walk the dog", false, 3)
 
         val taskObservable: Observable<Task> = Observable
             .create(object : ObservableOnSubscribe<Task> {
                 override fun subscribe(emitter: ObservableEmitter<Task>) {
+
+                    for (task in DataSource.createTasksList())
+                        if (!emitter.isDisposed) {
+                            emitter.onNext(task)
+                        }
+
                     if (!emitter.isDisposed) {
-                        emitter.onNext(task)
                         emitter.onComplete()
                     }
                 }
