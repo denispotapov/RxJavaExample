@@ -24,30 +24,19 @@ class MainActivity : AppCompatActivity() {
 
         //val task = Task("Walk the dog", false, 3)
 
-        val taskObservable: Observable<Task> = Observable
-            .create(object : ObservableOnSubscribe<Task> {
-                override fun subscribe(emitter: ObservableEmitter<Task>) {
-
-                    for (task in DataSource.createTasksList())
-                        if (!emitter.isDisposed) {
-                            emitter.onNext(task)
-                        }
-
-                    if (!emitter.isDisposed) {
-                        emitter.onComplete()
-                    }
-                }
-            })
+        val taskObservable  = Observable
+            .just("first", "second", "third", "fourth", "fifth", "sixth",
+                "seventh", "eighth", "ninth", "tenth")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
 
-        taskObservable.subscribe(object : Observer<Task> {
+        taskObservable.subscribe(object : Observer<String> {
             override fun onSubscribe(d: Disposable) {
 
             }
 
-            override fun onNext(t: Task) {
-                Timber.d("onNext: ${t.description}")
+            override fun onNext(t: String) {
+                Timber.d("onNext: $t")
             }
 
             override fun onError(e: Throwable) {
