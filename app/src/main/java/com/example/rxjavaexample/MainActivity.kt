@@ -2,9 +2,12 @@ package com.example.rxjavaexample
 
 import android.os.Bundle
 import android.widget.SearchView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.rxjavaexample.databinding.ActivityMainBinding
+import com.jakewharton.rxbinding2.view.RxView
 import io.reactivex.*
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Function
@@ -16,6 +19,7 @@ class MainActivity : AppCompatActivity() {
 
     private val disposables = CompositeDisposable()
     private lateinit var binding: ActivityMainBinding
+    var timeSinceLastRequest = System.currentTimeMillis()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,55 +28,30 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
-        var timeSinceLastRequest = System.currentTimeMillis()
+        RxView.clicks(binding.button)
+            .throttleFirst(4000, TimeUnit.MILLISECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<Any> {
+                override fun onSubscribe(d: Disposable) {
+                    disposables.add(d)
+                }
 
-        val observableQueryText = Observable
-            .create(object : ObservableOnSubscribe<String> {
-                override fun subscribe(emitter: ObservableEmitter<String>) {
+                override fun onNext(t: Any) {
+                    Timber.d("onNext: time last since request ${System.currentTimeMillis() - timeSinceLastRequest}")
+                    someMethod()
+                }
 
-                    binding.searchView.setOnQueryTextListener(object :
-                        SearchView.OnQueryTextListener {
+                override fun onError(e: Throwable) {
+                }
 
-                        override fun onQueryTextSubmit(p0: String?): Boolean {
-                            return false
-                        }
-
-                        override fun onQueryTextChange(p0: String?): Boolean {
-                            if (!emitter.isDisposed) {
-                                if (p0 != null && p0 != "") {
-                                    emitter.onNext(p0)
-                                }
-                            }
-                            return false
-                        }
-                    })
+                override fun onComplete() {
                 }
             })
-            .debounce(1000, TimeUnit.MILLISECONDS)
-            .subscribeOn(Schedulers.io())
-
-        observableQueryText.subscribe(object : Observer<String> {
-            override fun onSubscribe(d: Disposable) {
-                disposables.add(d)
-            }
-
-            override fun onNext(t: String) {
-                Timber.d("onNext: time last since request ${System.currentTimeMillis() - timeSinceLastRequest}")
-                Timber.d("onNext: search query $t")
-                timeSinceLastRequest = System.currentTimeMillis()
-                sendRequestToServer(t)
-            }
-
-            override fun onError(e: Throwable) {
-            }
-
-            override fun onComplete() {
-            }
-        })
     }
 
-
-    private fun sendRequestToServer(query: String){
+    private fun someMethod() {
+        timeSinceLastRequest = System.currentTimeMillis()
+        Toast.makeText(this, "you clicked the button", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
