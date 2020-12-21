@@ -23,31 +23,28 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
-        //val task = Task("Walk the dog", false, 3)
-
-        val observable  = Observable
-            .range(0, 3)
+        val taskObservable  = Observable
+            .fromIterable(DataSource.createTasksList())
             .subscribeOn(Schedulers.io())
-            .repeat(3)
+            .buffer(2)
             .observeOn(AndroidSchedulers.mainThread())
 
-        observable.subscribe(object : Observer<Int> {
+        taskObservable.subscribe(object : Observer<List<Task>> {
             override fun onSubscribe(d: Disposable) {
-
             }
 
-            override fun onNext(t: Int) {
-                Timber.d("onNext: $t")
+            override fun onNext(t: List<Task>) {
+                Timber.d("onNext: bundle results: -------------------")
+                for (task in t) {
+                    Timber.d("onNext: ${task.description}")
+                }
             }
 
             override fun onError(e: Throwable) {
-
             }
 
             override fun onComplete() {
-
             }
-
         })
     }
 }
