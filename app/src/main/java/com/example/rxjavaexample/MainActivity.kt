@@ -2,49 +2,50 @@ package com.example.rxjavaexample
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
-import io.reactivex.ObservableOnSubscribe
+import com.example.rxjavaexample.databinding.ActivityMainBinding
+import com.jakewharton.rxbinding2.view.RxView
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Function
-import io.reactivex.functions.Predicate
-import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
-    val disposables = CompositeDisposable()
+    private val disposables = CompositeDisposable()
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
-        val taskObservable  = Observable
-            .fromIterable(DataSource.createTasksList())
-            .subscribeOn(Schedulers.io())
-            .buffer(2)
+        RxView.clicks(binding.button)
+            .map { return@map 1 }
+            .buffer(4, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
-
-        taskObservable.subscribe(object : Observer<List<Task>> {
-            override fun onSubscribe(d: Disposable) {
-            }
-
-            override fun onNext(t: List<Task>) {
-                Timber.d("onNext: bundle results: -------------------")
-                for (task in t) {
-                    Timber.d("onNext: ${task.description}")
+            .subscribe(object : Observer<List<Int>> {
+                override fun onSubscribe(d: Disposable) {
+                    disposables.add(d)
                 }
-            }
 
-            override fun onError(e: Throwable) {
-            }
+                override fun onNext(t: List<Int>) {
+                    Timber.d("onNext: You Clicked ${t.size} times in 4 seconds")
+                }
 
-            override fun onComplete() {
-            }
-        })
+                override fun onError(e: Throwable) {
+                }
+
+                override fun onComplete() {
+                }
+            })
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disposables.clear()
     }
 }
