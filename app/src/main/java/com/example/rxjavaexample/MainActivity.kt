@@ -26,28 +26,18 @@ class MainActivity : AppCompatActivity() {
         //val task = Task("Walk the dog", false, 3)
 
         val observable  = Observable
-            .range(0, 9)
+            .range(0, 3)
             .subscribeOn(Schedulers.io())
-            .map(object : Function<Int, Task> {
-                override fun apply(t: Int): Task {
-                    Timber.d("apply: ${Thread.currentThread().name}")
-                    return Task("this is a task with priority: $t", false, t)
-                }
-            })
-            .takeWhile(object : Predicate<Task> {
-                override fun test(t: Task): Boolean {
-                    return t.priority < 9
-                }
-            })
+            .repeat(3)
             .observeOn(AndroidSchedulers.mainThread())
 
-        observable.subscribe(object : Observer<Task> {
+        observable.subscribe(object : Observer<Int> {
             override fun onSubscribe(d: Disposable) {
 
             }
 
-            override fun onNext(t: Task) {
-                Timber.d("onNext: ${t.priority}")
+            override fun onNext(t: Int) {
+                Timber.d("onNext: $t")
             }
 
             override fun onError(e: Throwable) {
