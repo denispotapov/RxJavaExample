@@ -8,6 +8,7 @@ import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.functions.Function
 import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
@@ -26,10 +27,9 @@ class MainActivity : AppCompatActivity() {
 
         val taskObservable = Observable
             .fromIterable(DataSource.createTasksList())
-            .filter(object : Predicate<Task> {
-                override fun test(t: Task): Boolean {
-                    return (t.description == "Walk the dog")
-                    //return t.isComplete
+            .distinct(object : Function<Task, String> {
+                override fun apply(t: Task): String {
+                    return t.description
                 }
             })
             .subscribeOn(Schedulers.io())
