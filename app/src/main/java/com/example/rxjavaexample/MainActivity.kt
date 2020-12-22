@@ -8,6 +8,7 @@ import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 
@@ -23,28 +24,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
-        val task = arrayOf(
-            Task("Take out the trash", true, 3),
-            Task("Walk the dog", false, 2),
-            Task("Make my bed", true, 1),
-            Task("Unload the dishwasher", false, 0),
-            Task("Make dinner", true, 5))
-
         val taskObservable = Observable
-            .fromArray(task)
+            .fromIterable(DataSource.createTasksList())
+            .filter(object : Predicate<Task> {
+                override fun test(t: Task): Boolean {
+                    return (t.description == "Walk the dog")
+                    //return t.isComplete
+                }
+            })
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
 
-        taskObservable.subscribe(object : Observer<Array<Task>> {
+        taskObservable.subscribe(object : Observer<Task> {
             override fun onSubscribe(d: Disposable) {
             }
 
-            override fun onNext(t: Array<Task>) {
-                Timber.d("onNext: ${t[0].description}")
-                Timber.d("onNext: ${t[1].description}")
-                Timber.d("onNext: ${t[2].description}")
-                Timber.d("onNext: ${t[3].description}")
-                Timber.d("onNext: ${t[4].description}")
+            override fun onNext(t: Task) {
+                Timber.d("onNext: ${t.description}")
             }
 
             override fun onError(e: Throwable) {
@@ -53,6 +49,7 @@ class MainActivity : AppCompatActivity() {
             override fun onComplete() {
             }
         })
+
 
     }
 
