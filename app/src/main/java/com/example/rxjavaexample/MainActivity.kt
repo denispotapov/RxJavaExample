@@ -8,10 +8,8 @@ import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,17 +23,28 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
-        val timeObservable = Observable
-            .timer(3, TimeUnit.SECONDS)
+        val task = arrayOf(
+            Task("Take out the trash", true, 3),
+            Task("Walk the dog", false, 2),
+            Task("Make my bed", true, 1),
+            Task("Unload the dishwasher", false, 0),
+            Task("Make dinner", true, 5))
+
+        val taskObservable = Observable
+            .fromArray(task)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
 
-        timeObservable.subscribe(object : Observer<Long> {
+        taskObservable.subscribe(object : Observer<Array<Task>> {
             override fun onSubscribe(d: Disposable) {
             }
 
-            override fun onNext(t: Long) {
-                Timber.d("onNext: $t")
+            override fun onNext(t: Array<Task>) {
+                Timber.d("onNext: ${t[0].description}")
+                Timber.d("onNext: ${t[1].description}")
+                Timber.d("onNext: ${t[2].description}")
+                Timber.d("onNext: ${t[3].description}")
+                Timber.d("onNext: ${t[4].description}")
             }
 
             override fun onError(e: Throwable) {
@@ -44,5 +53,7 @@ class MainActivity : AppCompatActivity() {
             override fun onComplete() {
             }
         })
+
     }
+
 }
