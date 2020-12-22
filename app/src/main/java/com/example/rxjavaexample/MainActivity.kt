@@ -25,18 +25,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
-        val intervalObservable = Observable
-            .interval(1, TimeUnit.SECONDS)
+        val timeObservable = Observable
+            .timer(3, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.io())
-            .takeWhile(object : Predicate<Long> {
-                override fun test(t: Long): Boolean {
-                    Timber.d("test: $t thread: ${Thread.currentThread().name}")
-                    return t <= 5
-                }
-            })
             .observeOn(AndroidSchedulers.mainThread())
 
-        intervalObservable.subscribe(object : Observer<Long> {
+        timeObservable.subscribe(object : Observer<Long> {
             override fun onSubscribe(d: Disposable) {
             }
 
