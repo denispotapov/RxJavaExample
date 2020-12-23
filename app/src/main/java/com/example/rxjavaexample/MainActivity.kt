@@ -9,7 +9,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Function
-import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 
@@ -27,20 +26,20 @@ class MainActivity : AppCompatActivity() {
 
         val taskObservable = Observable
             .fromIterable(DataSource.createTasksList())
-            .takeWhile(object: Predicate<Task> {
-                override fun test(t: Task): Boolean {
-                    return t.isComplete
+            .map(object : Function<Task, String> {
+                override fun apply(t: Task): String {
+                    return t.description
                 }
             })
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
 
-        taskObservable.subscribe(object : Observer<Task> {
+        taskObservable.subscribe(object : Observer<String> {
             override fun onSubscribe(d: Disposable) {
             }
 
-            override fun onNext(t: Task) {
-                Timber.d("onNext: ${t.description}")
+            override fun onNext(t: String) {
+                Timber.d("onNext: $t")
             }
 
             override fun onError(e: Throwable) {
@@ -49,8 +48,5 @@ class MainActivity : AppCompatActivity() {
             override fun onComplete() {
             }
         })
-
-
     }
-
 }
